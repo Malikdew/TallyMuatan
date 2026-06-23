@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Logistik Muat Kapal - KM. LOGISTIK NUSANTARA 1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --primary-accent: #2563eb;
+            --primary-light: #eff6ff;
+            --success: #10b981;
+            --success-hover: #059669;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --background: #f1f5f9;
+            --surface: #ffffff;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            --shadow-blur: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--background);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--surface);
+            padding: 35px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-blur);
+        }
+
+        .header-app {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 25px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-title-block h2 {
+            margin: 0 0 4px 0;
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 26px;
+            letter-spacing: -0.5px;
+        }
+
+        .header-title-block p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .vessel-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background-color: var(--primary-light);
+            color: var(--primary-accent);
+            padding: 10px 20px;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 14px;
+            border: 1px solid #dbeafe;
+            box-shadow: var(--shadow);
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card-stat {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card-stat:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .card-stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: var(--primary-accent);
+        }
+
+        .card-stat.total::before { background-color: var(--primary-accent); }
+        .card-stat.type-stat::before { background-color: #f59e0b; }
+        .card-stat.prefix::before { background-color: var(--success); }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.75px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 800;
+            margin-top: 8px;
+            color: var(--primary);
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .prefix-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .badge-prefix {
+            font-size: 11px;
+            background: #e2e8f0;
+            color: #475569;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            border: 1px solid #cbd5e1;
+        }
+
+        .badge-type {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 800;
+            display: inline-block;
+            letter-spacing: 0.5px;
+        }
+        .badge-dry { background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+        .badge-reefer { background-color: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--primary);
+        }
+
+        textarea {
+            width: 100%;
+            height: 130px;
+            padding: 16px;
+            box-sizing: border-box;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            resize: vertical;
+            font-family: 'Courier New', Courier, monospace;
+            transition: all 0.2s;
+            background-color: #f8fafc;
+            color: var(--primary);
+            line-height: 1.6;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-accent);
+            background-color: #fff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .actions-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            margin-bottom: 35px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary { background-color: var(--primary-accent); color: white; }
+        .btn-primary:hover { background-color: #1d4ed8; transform: translateY(-1px); }
+
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-success:hover { background-color: var(--success-hover); transform: translateY(-1px); }
+
+        .btn-danger { background-color: #fff1f1; color: var(--danger); border: 1px solid #fee2e2; box-shadow: none; }
+        .btn-danger:hover { background-color: var(--danger); color: white; }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .search-input {
+            width: 300px;
+            padding: 12px 14px 12px 42px;
+            box-sizing: border-box;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            background-color: #f8fafc;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-accent);
+            background-color: #fff;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+        }
+
+        .table-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .table-section-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+            background: #fff;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 700;
+            padding: 16px 20px;
+            border-bottom: 2px solid var(--border);
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            color: var(--text-main);
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: #f8fafc; }
+
+        .text-center { text-align: center; }
+        
+        /* DIPERBARUI: Mencegah teks nomor kontainer patah/turun ke bawah di layar HP */
+        .container-code {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            background: #f1f5f9;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            display: inline-block;
+        }
+
+        .action-cell-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 10px;
+            min-width: auto;
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s;
+        }
+
+        .action-cell-btn:hover {
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            line-height: 1.6;
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header-app">
+            <div class="header-title-block">
+                <h2>Sistem Logistik Kontainer</h2>
+                <p>Manajemen manifestasi muat petikemas digital pelabuhan</p>
+            </div>
+            <div class="vessel-badge">
+                <i class="fa-solid fa-ship"></i> KM. LOGISTIK NUSANTARA 1 Voy 5
+            </div>
+        </div>
+
+        <div class="analytics-grid">
+            <div class="card-stat total">
+                <div class="stat-label">Total Muatan Kapal</div>
+                <div class="stat-value" id="dashTotal">0 Box</div>
+            </div>
+            <div class="card-stat type-stat">
+                <div class="stat-label">Jenis Kontainer</div>
+                <div class="stat-value" id="dashType" style="font-size: 16px; font-weight: 700; margin-top: 12px;">
+                    DRY: 0 | REEFER: 0
+                </div>
+            </div>
+            <div class="card-stat prefix">
+                <div class="stat-label">Rincian Komposisi Operator</div>
+                <div class="prefix-tags" id="dashPrefix">-</div>
+            </div>
+        </div>
+
+        <form id="containerForm">
+            <input type="hidden" id="vesselName" value="KM. LOGISTIK NUSANTARA 1 Voy 5">
+            <div class="form-group">
+                <label for="bulkContainers">
+                    <i class="fa-solid fa-square-plus" style="color: var(--primary-accent)"></i> Input Data Manifes (Nomor, Isi, Tipe & Tujuan):
+                </label>
+                <textarea id="bulkContainers" required placeholder="Contoh Variasi Input Fleksibel:&#10;PNJU 2003442 DRY&#10;PNJU 2013143 REEFER Semen Padang - Merauke&#10;PNJU2001651 Ikan Beku REEFER - Serui" autofocus></textarea>
+                <div class="hint">
+                    <i class="fa-solid fa-circle-info" style="color: var(--primary-accent); margin-right: 4px;"></i> 
+                    *Sistem otomatis mendeteksi kata kunci <strong>DRY</strong> atau <strong>REEFER</strong> di dalam baris (Default: DRY jika tidak diisi).<br>
+                    *Gunakan tanda pisah ( - ) jika ingin menyertakan kota/pelabuhan tujuan di bagian akhir baris.
+                </div>
+            </div>
+            <div class="actions-container">
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-plus"></i> Proses & Masukkan ke Dasbor
+                </button>
+                <div class="actions-bar">
+                    <button type="button" class="btn-success" onclick="eksporKeXlsx()">
+                        <i class="fa-solid fa-file-excel"></i> Download Excel (.xlsx)
+                    </button>
+                    <button type="button" class="btn-danger" onclick="hapusSemuaData()">
+                        <i class="fa-solid fa-trash-can"></i> Kosongkan Dasbor
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 30px 0;">
+
+        <div class="table-section-header">
+            <h3><i class="fa-solid fa-table-list" style="color: var(--primary-accent)"></i> Lembar Manifes Kontainer</h3>
+            <div class="search-container">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="liveSearch" class="search-input" placeholder="Cari nomor, isi, tipe atau tujuan..." onkeyup="filterTabel()">
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="containerTable">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;" class="text-center">No.</th>
+                        <th style="width: 23%;">Nama Kapal / Voyage</th>
+                        <th style="width: 20%;">Nomor Kontainer</th>
+                        <th style="width: 12%;" class="text-center">Tipe</th>
+                        <th style="width: 20%;">Isi Kontainer</th>
+                        <th style="width: 14%;">Tujuan</th>
+                        <th style="width: 6%;" class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", tampilkanData);
+
+    const form = document.getElementById("containerForm");
+    
+    form.addEventListener("submit", function(e) {
+        e.preventDefault();
+        
+        const kapal = document.getElementById("vesselName").value;
+        const rawInput = document.getElementById("bulkContainers").value;
+        
+        const lines = rawInput.split('\n');
+        let daftarKontainer = JSON.parse(localStorage.getItem("daftarKontainer")) || [];
+        
+        let countInput = 0;
+        let countDuplikat = 0;
+        let duplikatList = [];
+
+        lines.forEach(line => {
+            let cleanLine = line.trim().replace(/\s+/g, ' ');
+            if (!cleanLine) return;
+
+            let kontainerInput = "";
+            let isiInput = "";
+            let tipeInput = "DRY"; // Default tipe
+            let tujuanInput = "-";
+
+            if (cleanLine.includes('-')) {
+                let segmentTujuan = cleanLine.split('-');
+                tujuanInput = segmentTujuan[segmentTujuan.length - 1].trim().toUpperCase();
+                cleanLine = segmentTujuan.slice(0, -1).join('-').trim();
+            }
+
+            if (/\bREEFER\b/i.test(cleanLine)) {
+                tipeInput = "REEFER";
+                cleanLine = cleanLine.replace(/\bREEFER\b/ig, '').replace(/\s+/g, ' ').trim();
+            } else if (/\bDRY\b/i.test(cleanLine)) {
+                tipeInput = "DRY";
+                cleanLine = cleanLine.replace(/\bDRY\b/ig, '').replace(/\s+/g, ' ').trim();
+            }
+
+            let matchKontainer = cleanLine.match(/^([A-Z]{4})\s*(\d{7})/i);
+
+            if (matchKontainer) {
+                kontainerInput = (matchKontainer[1] + " " + matchKontainer[2]).toUpperCase();
+                isiInput = cleanLine.substring(matchKontainer[0].length).trim().toUpperCase();
+            } else {
+                let parts = cleanLine.split(' ');
+                kontainerInput = parts[0].toUpperCase();
+                isiInput = parts.slice(1).join(' ').toUpperCase();
+            }
+            
+            if(!isiInput) isiInput = "TIDAK ADA KETERANGAN";
+            if(!tujuanInput) tujuanInput = "-";
+
+            const sudahAda = daftarKontainer.some(item => item.kontainer.replace(/\s+/g, '') === kontainerInput.replace(/\s+/g, ''));
+            
+            if (sudahAda) {
+                countDuplikat++;
+                if (!duplikatList.includes(kontainerInput)) duplikatList.push(kontainerInput);
+            } else {
+                daftarKontainer.push({ 
+                    id: Date.now() + Math.random(), 
+                    kapal, 
+                    kontainer: kontainerInput,
+                    tipe: tipeInput,
+                    isi: isiInput,
+                    tujuan: tujuanInput
+                });
+                countInput++;
+            }
+        });
+        
+        localStorage.setItem("daftarKontainer", JSON.stringify(daftarKontainer));
+        
+        if (countDuplikat > 0) {
+            setTimeout(() => {
+                alert(`Berhasil menambahkan ${countInput} kontainer.\n\n${countDuplikat} data dilewati karena terdeteksi duplikat:\n${duplikatList.join(", ")}`);
+            }, 100);
+        }
+        
+        document.getElementById("bulkContainers").value = "";
+        tampilkanData();
+    });
+
+    function tampilkanData() {
+        const tbody = document.querySelector("#containerTable tbody");
+        tbody.innerHTML = "";
+        
+        let daftarKontainer = JSON.parse(localStorage.getItem("daftarKontainer")) || [];
+        
+        document.getElementById("dashTotal").innerText = `${daftarKontainer.length} Box`;
+        
+        hitungAnalisisTipe(daftarKontainer);
+        hitungAnalisisPrefix(daftarKontainer);
+        
+        if (daftarKontainer.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color: var(--text-muted); padding: 30px; font-weight: 500;">Belum ada manifestasi kontainer yang diinput.</td></tr>`;
+            return;
+        }
+
+        daftarKontainer.forEach((item, index) => {
+            const badgeClass = item.tipe === "REEFER" ? "badge-dry badge-reefer" : "badge-dry";
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td class="text-center" style="font-weight: 600; color: var(--text-muted);">${index + 1}</td>
+                <td style="font-weight: 500;"><i class="fa-solid fa-anchor" style="font-size:12px; color:var(--text-muted); margin-right:8px;"></i>${item.kapal}</td>
+                <td><span class="container-code">${item.kontainer}</span></td>
+                <td class="text-center"><span class="badge-type ${badgeClass}">${item.tipe || 'DRY'}</span></td>
+                <td><span style="font-weight: 600; color: var(--primary);">${item.isi}</span></td>
+                <td><span class="badge-prefix" style="background:#f0f9ff; color:#0284c7; font-weight:700; border-color:#bae6fd;"><i class="fa-solid fa-location-dot" style="margin-right:4px; font-size:11px;"></i>${item.tujuan || '-'}</span></td>
+                <td class="text-center">
+                    <button class="action-cell-btn" onclick="hapusSatuData('${item.id}')" title="Hapus baris ini"><i class="fa-solid fa-trash-can"></i></button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function hitungAnalisisTipe(daftar) {
+        let dryCount = 0;
+        let reeferCount = 0;
+        daftar.forEach(item => {
+            if (item.tipe === "REEFER") reeferCount++;
+            else dryCount++;
+        });
+        document.getElementById("dashType").innerHTML = `DRY: <span style="color:var(--primary-accent);">${dryCount}</span> &nbsp;|&nbsp; REEFER: <span style="color:#ea580c;">${reeferCount}</span>`;
+    }
+
+    function hitungAnalisisPrefix(daftar) {
+        const prefixDiv = document.getElementById("dashPrefix");
+        if (daftar.length === 0) {
+            prefixDiv.innerHTML = `<span style="color:var(--text-muted); font-size:13px; font-weight:500;">Tidak ada data</span>`;
+            return;
+        }
+
+        let counts = {};
+        daftar.forEach(item => {
+            let prefix = item.kontainer.substring(0, 4);
+            if (/^[A-Z]{4}$/.test(prefix)) {
+                counts[prefix] = (counts[prefix] || 0) + 1;
+            } else {
+                counts["LAIN"] = (counts["LAIN"] || 0) + 1;
+            }
+        });
+
+        prefixDiv.innerHTML = "";
+        for (let key in counts) {
+            prefixDiv.innerHTML += `<span class="badge-prefix">${key}: <strong style="color:var(--primary);">${counts[key]}</strong></span>`;
+        }
+    }
+
+    function filterTabel() {
+        const input = document.getElementById("liveSearch").value.toUpperCase();
+        const table = document.getElementById("containerTable");
+        const tr = table.getElementsByTagName("tr");
+
+        for (let i = 1; i < tr.length; i++) {
+            let tdKontainer = tr[i].getElementsByTagName("td")[2]; 
+            let tdTipe = tr[i].getElementsByTagName("td")[3]; 
+            let tdIsi = tr[i].getElementsByTagName("td")[4];       
+            let tdTujuan = tr[i].getElementsByTagName("td")[5];    
+            
+            if (tdKontainer && tdTipe && tdIsi && tdTujuan) {
+                let txtKontainer = tdKontainer.textContent || tdKontainer.innerText;
+                let txtTipe = tdTipe.textContent || tdTipe.innerText;
+                let txtIsi = tdIsi.textContent || tdIsi.innerText;
+                let txtTujuan = tdTujuan.textContent || tdTujuan.innerText;
+                
+                if (txtKontainer.toUpperCase().indexOf(input) > -1 || 
+                    txtTipe.toUpperCase().indexOf(input) > -1 || 
+                    txtIsi.toUpperCase().indexOf(input) > -1 || 
+                    txtTujuan.toUpperCase().indexOf(input) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    function hapusSatuData(id) {
+        let daftarKontainer = JSON.parse(localStorage.getItem("daftarKontainer")) || [];
+        daftarKontainer = daftarKontainer.filter(item => String(item.id) !== String(id));
+        localStorage.setItem("daftarKontainer", JSON.stringify(daftarKontainer));
+        tampilkanData();
+    }
+
+    function hapusSemuaData() {
+        if (confirm("Apakah Anda benar-benar ingin mengosongkan seluruh manifes kontainer di kapal ini?")) {
+            localStorage.removeItem("daftarKontainer");
+            tampilkanData();
+        }
+    }
+
+    function eksporKeXlsx() {
+        let daftarKontainer = JSON.parse(localStorage.getItem("daftarKontainer")) || [];
+        if (daftarKontainer.length === 0) {
+            alert("Belum ada data manifes yang terisi!");
+            return;
+        }
+        
+        const dataExcel = [
+            ["MANIFES LOGISTIK MUAT KONTAINER KAPAL"],
+            ["Nama Kapal / Voyage : KM. LOGISTIK NUSANTARA 1 Voy 5"],
+            ["Tanggal Cetak Dokumen: " + new Date().toLocaleDateString('id-ID')],
+            [], 
+            ["No.", "Nama Kapal / Pelayaran", "Nomor Identitas Kontainer", "Tipe Kontainer", "Isi Deskripsi Kontainer", "Pelabuhan Tujuan"]
+        ];
+        
+        let dryCount = 0;
+        let reeferCount = 0;
+
+        daftarKontainer.forEach((item, index) => {
+            if(item.tipe === "REEFER") reeferCount++; else dryCount++;
+            dataExcel.push([index + 1, item.kapal, item.kontainer, item.tipe || 'DRY', item.isi, item.tujuan || '-']);
+        });
+        
+        dataExcel.push([]);
+        dataExcel.push(["TOTAL SELURUH MUATAN BOX", "", `${daftarKontainer.length} BOX`, `DRY: ${dryCount} | REEFER: ${reeferCount}`, "", ""]);
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(dataExcel);
+        
+        ws['!cols'] = [
+            { wch: 6 },  
+            { wch: 35 }, 
+            { wch: 25 },
+            { wch: 15 },
+            { wch: 35 },
+            { wch: 20 }  
+        ];
+        
+        ws['!merges'] = [
+            { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
+            { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } },
+            { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } }
+        ];
+
+        XLSX.utils.book_append_sheet(wb, ws, "Manifes Muat");
+        XLSX.writeFile(wb, "Manifes_KM_LOGISTIK_NUSANTARA_1_Voy5.xlsx");
+    }
+</script>
+</body>
+</html>
